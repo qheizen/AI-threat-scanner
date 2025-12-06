@@ -1,12 +1,12 @@
 import sqlite3
 
-from database import const
-from database import logger
+from database.utils import const
+from database.utils import logger
 
 _logger = logger.get_module_logger("UTILS")
 
 
-class DBProcessor:
+class DBConnector:
 
     def __init__(self, db_path: str):
         self.__db_path = db_path if db_path else const.DB_PATH
