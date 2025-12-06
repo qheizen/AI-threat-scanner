@@ -9,7 +9,7 @@ _logger = logger.get_module_logger("ThreateningFileMapper")
 class ThreateningFile:
 
     def __init__(
-        self, id: int = -1, file_name: str = "", sha256: str = "", file_embedding: str = "", threat_type_id: int = 0, creation_date: str = "", created_by: int = 0,
+        self, id: int = -1, file_name: str = "", sha256: str = "", file_embedding: str = "", threat_type_id: int = 0, creation_date: str = "", created_by: int = 0, approve_state: str = 'unnaproved'
     ):
         self.id = id
         self.file_name = file_name
@@ -17,6 +17,7 @@ class ThreateningFile:
         self.file_embedding = file_embedding
         self.threat_type_id = threat_type_id
         self.creation_date = creation_date
+        self.approve_state = approve_state
         self.created_by = created_by
 
     @classmethod
@@ -28,6 +29,7 @@ class ThreateningFile:
             file_embedding=data.get("fileEmbedding", ""),
             threat_type_id=data.get("threatType_id", 0),
             creation_date=data.get("creationDate", ""),
+            approve_state=data.get('approveState', "unnaproved")
             created_by=data.get("createdBy", 0),
         )
 
@@ -39,6 +41,7 @@ class ThreateningFile:
             "fileEmbedding": self.file_embedding,
             "threatType_id": self.threat_type_id,
             "creationDate": self.creation_date,
+            "approveState": self.approve_state,
             "createdBy": self.created_by,
         }
 
@@ -60,6 +63,14 @@ class ThreateningFileMapper:
             file = ThreateningFile.from_dict(answer[0])
             return file
 
+    @staticmethod
+    def get_files_from_approve_state(state: str) -> list[ThreateningFile]:
+        sanitized_state = sanitize_sql_string(state)
+        if answer := db.search_db(
+            "SELECT * FROM ThreateningFiles WHERE approveState = '%s'" % sanitized_state
+        ):
+            return [ThreateningFile.from_dict(row) for row in answer]
+        
     @staticmethod
     def get_files_from_user_id(id: int) -> list[ThreateningFile]:
         if answer := db.search_db(
@@ -101,7 +112,7 @@ class ThreateningFileMapper:
 
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        sql_request = "INSERT INTO ThreateningFiles (fileName, sha256, fileEmbedding, threatType_id, creationDate, createdBy) VALUES ('%s', '%s', '%s', %s, '%s', %s)"
+        sql_request = "INSERT INTO ThreateningFiles (fileName, sha256, fileEmbedding, threatType_id, creationDate, createdBy, approveState) VALUES ('%s', '%s', '%s', %s, '%s', %s, '%s')"
         request = sql_request % (
             sanitize_sql_string(file.file_name),
             sanitize_sql_string(file.sha256),
@@ -109,6 +120,7 @@ class ThreateningFileMapper:
             int(file.threat_type_id),
             current_date, 
             int(file.created_by),
+            sanitize_sql_string(file.approve_state)
         )
         try:
             db.write_db(request)
@@ -124,6 +136,18 @@ class ThreateningFileMapper:
         try:
             db.write_db(
                 "UPDATE ThreateningFiles SET fileEmbedding = '%s' WHERE id = %d" % (sanitized_embedding, file_id)
+            )
+            return True
+        except Exception as e:
+            _logger.error(f"Error updating file embedding: {e}")
+            return False
+        
+    @staticmethod
+    def update_file_status(file_id: int, status: str) -> bool:
+        sanitized_status = sanitize_sql_string(status)
+        try:
+            db.write_db(
+                "UPDATE ThreateningFiles SET approveState = '%s' WHERE id = %d" % (sanitized_status, file_id)
             )
             return True
         except Exception as e:

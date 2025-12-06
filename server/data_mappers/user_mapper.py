@@ -79,7 +79,7 @@ class UserMapper:
         ):
             user = User.from_dict(answer[0])
             return user
-        
+
     @staticmethod
     def get_all() -> list[User]:
         if answer := db.search_db("SELECT * FROM Users"):
@@ -93,7 +93,7 @@ class UserMapper:
     def create(user: User) -> bool:
         if isinstance(user, dict):
             user = User.from_dict(user)
-        
+
         if UserMapper.get_user_with_login(user.login):
             _logger.error(f"Record {user.login} already exists!")
             return False
