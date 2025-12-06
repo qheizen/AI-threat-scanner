@@ -1,7 +1,7 @@
 import sqlite3
 
-from database.utils import const
-from database.utils import logger
+from ..utils import const
+from ..utils import logger
 
 _logger = logger.get_module_logger("UTILS")
 
@@ -13,8 +13,8 @@ class DBConnector:
 
     def write_db(self, query: str):
         """
-            Осуществляет запись в базу данных по запросу query
-            in: query: str запрос SQL к базе данных
+        Осуществляет запись в базу данных по запросу query
+        in: query: str запрос SQL к базе данных
         """
         if not query.strip():
             _logger.error("SQL query cannot be empty")
@@ -27,9 +27,9 @@ class DBConnector:
 
     def search_db(self, query: str):
         """
-            Осуществляет поиск и чтение данных из базы по запросу query
-            in: query: str запрос SQL к базе данных
-            out: list[dict]
+        Осуществляет поиск и чтение данных из базы по запросу query
+        in: query: str запрос SQL к базе данных
+        out: list[dict]
         """
         if not query.strip():
             _logger.error("SQL query cannot be empty")
@@ -40,5 +40,8 @@ class DBConnector:
             cursor = connection.cursor()
 
             answer = cursor.execute(query).fetchall()
-            answer_dict = [dict(row) for row in answer]
+            answer_dict = [dict(row) for row in answer] if answer else []
             return answer_dict
+
+
+db = DBConnector(const.DB_PATH)
