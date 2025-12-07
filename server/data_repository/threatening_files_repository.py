@@ -8,10 +8,7 @@ class ThreateningFileRepository:
 
     @staticmethod
     def create(file_data: dict) -> ThreateningFile:
-        if any(
-            key not in file_data
-            for key in ["fileName", "sha256", "fileEmbedding"]
-        ):
+        if any(key not in file_data for key in ["fileName", "sha256", "fileEmbedding"]):
             _logger.error(f"Record corrupted {file_data}")
             return None
 
