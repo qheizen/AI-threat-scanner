@@ -1,1 +1,1 @@
-from . import user_repository
+from . import user_repository, threat_type_repository, threatening_files_repository, file_type_repository
