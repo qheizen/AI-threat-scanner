@@ -197,4 +197,4 @@ def register_user() -> tuple:
 
 def start_server():
     _logger.info("armtek emulator - start")
-    app.run(debug=True, host=const.HOST, port=const.PORT)
+    app.run(debug=False, host=const.HOST, port=const.PORT)

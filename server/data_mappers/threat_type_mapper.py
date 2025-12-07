@@ -1,4 +1,4 @@
-from database.database_connector import db
+from ..database.database_connector import db
 from ..utils.tools import sanitize_sql_string
 from ..utils import logger
 
