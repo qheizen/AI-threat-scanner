@@ -20,7 +20,8 @@ def catcher(func):
             return func(*args, **kwargs)
         except Exception as e:
             traceback_msg = traceback.format_exc()
-            _logger.error(f"Something at {func.__name__}\nExc: {e}\n{traceback_msg}")
+            _logger.error(
+                f"Something at {func.__name__}\nExc: {e}\n{traceback_msg}")
             return jsonify({"MESSAGES": str(e), "STATUS": 500}), 500
 
     return wrapper
@@ -124,9 +125,9 @@ def search() -> tuple:
     result = handler(**search_args)
     response_data = _base_response()
     if isinstance(result, list):
-        response_data["RESP"] = result
+        response_data["RESP"] = [user.to_dict() for user in result]
     else:
-        response_data["RESP"].append(result)
+        response_data["RESP"].append(result.to_dict())
 
     return jsonify(response_data), 200
 
@@ -151,10 +152,11 @@ def create() -> tuple:
         return err_resp, status
 
     data_to_create = request_data.get("data", [])
+    
     response_data = _base_response()
 
     for data in data_to_create:
-        response_data["RESP"].append(handler(data))
+        response_data["RESP"].append(handler(data).to_dict())
 
     return jsonify(response_data), 200
 
@@ -231,7 +233,23 @@ def register_user() -> tuple:
 
     response_data = _base_response()
     user = user_repository.UserRepository.create(request_data)
-    response_data["RESP"].append(user)
+    response_data["RESP"].append(user.to_dict())
+    return jsonify(response_data), 200
+
+
+@catcher
+@app.route("/getuserid", methods=["POST"])
+def get_user_id() -> tuple:
+    request_data: dict = request.get_json()
+    _logger.info(f"User search start, input: {request_data}")
+
+    error = _check_auth(request_data, 1)
+    if error:
+        return error
+
+    response_data = _base_response()
+    user = user_repository.UserRepository.search(login=request_data["login"])
+    response_data["RESP"].append(user.to_dict())
     return jsonify(response_data), 200
 
 
