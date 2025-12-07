@@ -29,7 +29,7 @@ class ThreateningFile:
             file_embedding=data.get("fileEmbedding", ""),
             threat_type_id=data.get("threatType_id", 0),
             creation_date=data.get("creationDate", ""),
-            approve_state=data.get('approveState', "unnaproved")
+            approve_state=data.get('approveState', "unnaproved"),
             created_by=data.get("createdBy", 0),
         )
 
@@ -70,7 +70,7 @@ class ThreateningFileMapper:
             "SELECT * FROM ThreateningFiles WHERE approveState = '%s'" % sanitized_state
         ):
             return [ThreateningFile.from_dict(row) for row in answer]
-        
+
     @staticmethod
     def get_files_from_user_id(id: int) -> list[ThreateningFile]:
         if answer := db.search_db(
@@ -118,9 +118,9 @@ class ThreateningFileMapper:
             sanitize_sql_string(file.sha256),
             sanitize_sql_string(file.file_embedding),
             int(file.threat_type_id),
-            current_date, 
+            current_date,
             int(file.created_by),
-            sanitize_sql_string(file.approve_state)
+            sanitize_sql_string(file.approve_state),
         )
         try:
             db.write_db(request)
@@ -135,21 +135,47 @@ class ThreateningFileMapper:
         sanitized_embedding = sanitize_sql_string(embedding)
         try:
             db.write_db(
-                "UPDATE ThreateningFiles SET fileEmbedding = '%s' WHERE id = %d" % (sanitized_embedding, file_id)
+                "UPDATE ThreateningFiles SET fileEmbedding = '%s' WHERE id = %d"
+                % (sanitized_embedding, file_id)
             )
             return True
         except Exception as e:
             _logger.error(f"Error updating file embedding: {e}")
             return False
-        
+
     @staticmethod
     def update_file_status(file_id: int, status: str) -> bool:
         sanitized_status = sanitize_sql_string(status)
         try:
             db.write_db(
-                "UPDATE ThreateningFiles SET approveState = '%s' WHERE id = %d" % (sanitized_status, file_id)
+                "UPDATE ThreateningFiles SET approveState = '%s' WHERE id = %d"
+                % (sanitized_status, file_id)
             )
             return True
         except Exception as e:
             _logger.error(f"Error updating file embedding: {e}")
+            return False
+
+    @staticmethod
+    def update(id: int, data: dict) -> bool:
+        set_parts = []
+        params = []
+
+        for field, value in data.items():
+            if isinstance(value, str):
+                set_parts.append(f"{field} = '%s'")
+                params.append(sanitize_sql_string(value))
+            else:
+                set_parts.append(f"{field} = %s")
+                params.append(str(value))
+
+        if not set_parts:
+            return False
+
+        sql = f"UPDATE ThreatTypes SET {', '.join(set_parts)} WHERE id = {id}"
+
+        try:
+            db.write_db(sql % tuple(params))
+            return True
+        except:
             return False

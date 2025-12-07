@@ -87,3 +87,27 @@ class FileTypeMapper:
         except Exception as e:
             _logger.error(f"SQLite Error: {e}")
             return False
+        
+    @staticmethod
+    def update(id: int, data: dict) -> bool:
+        set_parts = []
+        params = []
+        
+        for field, value in data.items():
+            if isinstance(value, str):
+                set_parts.append(f"{field} = '%s'")
+                params.append(sanitize_sql_string(value))
+            else:
+                set_parts.append(f"{field} = %s")
+                params.append(str(value))
+        
+        if not set_parts:
+            return False
+            
+        sql = f"UPDATE FileTypes SET {', '.join(set_parts)} WHERE id = {id}"
+        
+        try:
+            db.write_db(sql % tuple(params))
+            return True
+        except:
+            return False

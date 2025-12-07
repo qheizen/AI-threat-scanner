@@ -52,6 +52,15 @@ class ThreatTypeMapper:
             "SELECT * FROM ThreatTypes WHERE createdBy = %d" % id
         ):
             return [ThreatType.from_dict(row) for row in answer]
+        
+    @staticmethod
+    def get_threat_types_from_id(id: int) -> list[ThreatType]:
+        if answer := db.search_db(
+            "SELECT * FROM ThreatTypes WHERE id = %d" % id
+        ):
+            threat_type = ThreatType.from_dict(answer[0])
+            return threat_type
+
 
     @staticmethod
     def get_all() -> list[ThreatType]:
@@ -59,11 +68,11 @@ class ThreatTypeMapper:
             return [ThreatType.from_dict(row) for row in answer]
 
     @staticmethod
-    def delete_user_with_id(id: int):
+    def delete_threat_with_id(id: int):
         db.write_db("DELETE FROM ThreatTypes WHERE id = %d" % id)
 
     @staticmethod
-    def delete_user_with_name(name: int):
+    def delete_threat_with_name(name: int):
         sanitized_name = sanitize_sql_string(name)
         db.write_db("DELETE FROM ThreatTypes WHERE threatName = '%s'" % sanitized_name)
 
@@ -89,4 +98,28 @@ class ThreatTypeMapper:
 
         except Exception as e:
             _logger.error(f"SQLite Error: {e}")
+            return False
+        
+    @staticmethod
+    def update(id: int, data: dict) -> bool:
+        set_parts = []
+        params = []
+        
+        for field, value in data.items():
+            if isinstance(value, str):
+                set_parts.append(f"{field} = '%s'")
+                params.append(sanitize_sql_string(value))
+            else:
+                set_parts.append(f"{field} = %s")
+                params.append(str(value))
+        
+        if not set_parts:
+            return False
+            
+        sql = f"UPDATE ThreatTypes SET {', '.join(set_parts)} WHERE id = {id}"
+        
+        try:
+            db.write_db(sql % tuple(params))
+            return True
+        except:
             return False

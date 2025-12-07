@@ -61,6 +61,7 @@ class UserMapper:
         if answer := db.search_db("SELECT * FROM Users WHERE id = %d" % id):
             user = User.from_dict(answer[0])
             return user
+        return None
 
     @staticmethod
     def get_user_with_login(login: str) -> User:
@@ -70,6 +71,7 @@ class UserMapper:
         ):
             user = User.from_dict(answer[0])
             return user
+        return None
 
     @staticmethod
     def get_user_with_token(token: str) -> User:
@@ -79,6 +81,7 @@ class UserMapper:
         ):
             user = User.from_dict(answer[0])
             return user
+        return None
 
     @staticmethod
     def get_all() -> list[User]:
