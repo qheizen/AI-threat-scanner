@@ -26,77 +26,133 @@ def catcher(func):
     return wrapper
 
 
-@catcher
-@app.route("/search", methods=["POST"])
-def search() -> tuple:
-    handlers = {
-        "FileType": file_type_repository.FileTypeRepository.search,
-        "ThreatType": threat_type_repository.ThreatTypeRepository.search,
-        "ThreateningFiles": threatening_files_repository.ThreateningFileRepository.search,
-    }
+# Универсальный маппинг таблица -> репозиторий
+TABLE_HANDLERS = {
+    "FileType": {
+        "search": file_type_repository.FileTypeRepository.search,
+        "create": file_type_repository.FileTypeRepository.create,
+        "update": file_type_repository.FileTypeRepository.update,
+        "delete": file_type_repository.FileTypeRepository.delete,
+    },
+    "ThreatType": {
+        "search": threat_type_repository.ThreatTypeRepository.search,
+        "create": threat_type_repository.ThreatTypeRepository.create,
+        "update": threat_type_repository.ThreatTypeRepository.update,
+        "delete": threat_type_repository.ThreatTypeRepository.delete,
+    },
+    "ThreateningFiles": {
+        "search": threatening_files_repository.ThreateningFileRepository.search,
+        "create": threatening_files_repository.ThreateningFileRepository.create,
+        "update": threatening_files_repository.ThreateningFileRepository.update,
+        "delete": threatening_files_repository.ThreateningFileRepository.delete,
+    },
+}
 
-    request_data: dict = request.get_json()
-    _logger.info(f"Search start, input: {request_data}")
 
+def _validate_base_request(request_data: dict):
+    """Проверка наличия обязательных полей login/password/table."""
     if any(key not in request_data for key in ["login", "password", "table"]):
         return jsonify({"MESSAGES": f"Invalid input data: {request_data}"}), 400
+    return None
 
+
+def _check_auth(request_data: dict, operation: int = 0):
+    """Аутентификация и авторизация пользователя."""
     if (
         not user_repository.UserRepository.autentification(
             request_data["login"], request_data["password"]
         )
-        or user_repository.UserRepository.authorization(request_data["login"])[1]
-        == False
+        or user_repository.UserRepository.authorization(request_data["login"])[operation]
+        is False
     ):
         return jsonify({"MESSAGES": "Forbidden", "STATUS": 403}), 403
+    return None
 
-    response_data = {"STATUS": 200, "MESSAGES": [], "RESP": []}
+
+def _get_table_handler(table: str, operation: str):
+    """Получение обработчика по названию таблицы и операции."""
+    table_info = TABLE_HANDLERS.get(table)
+    if not table_info:
+        return (
+            jsonify({"MESSAGES": f"Unknown table: {table}", "STATUS": 400}),
+            400,
+            None,
+        )
+    handler = table_info.get(operation)
+    if not handler:
+        return (
+            jsonify(
+                {
+                    "MESSAGES": f"Unknown operation '{operation}' for table: {table}",
+                    "STATUS": 400,
+                }
+            ),
+            400,
+            None,
+        )
+    return None, None, handler
+
+
+def _base_response():
+    return {"STATUS": 200, "MESSAGES": [], "RESP": []}
+
+
+@catcher
+@app.route("/search", methods=["POST"])
+def search() -> tuple:
+    request_data: dict = request.get_json()
+    _logger.info(f"Search start, input: {request_data}")
+
+    # Валидируем базовые поля
+    error = _validate_base_request(request_data)
+    if error:
+        return error
+
+    error = _check_auth(request_data, 1)
+    if error:
+        return error
+
     table = request_data["table"]
-    if table not in handlers:
-        return jsonify({"MESSAGES": f"Unknown table: {table}", "STATUS": 400}), 400
-    handler = handlers[table]
+    err_resp, status, handler = _get_table_handler(table, "search")
+    if handler is None:
+        return err_resp, status
 
     search_args = {
         k: v for k, v in request_data.items() if k not in ["login", "password", "table"]
     }
 
     result = handler(**search_args)
+    response_data = _base_response()
     if isinstance(result, list):
         response_data["RESP"] = result
     else:
         response_data["RESP"].append(result)
+
     return jsonify(response_data), 200
 
 
+@catcher
 @app.route("/create", methods=["POST"])
 def create() -> tuple:
-    handlers = {
-        "FileType": file_type_repository.FileTypeRepository.create,
-        "ThreatType": threat_type_repository.ThreatTypeRepository.create,
-        "ThreateningFiles": threatening_files_repository.ThreateningFileRepository.create,
-    }
-
     request_data: dict = request.get_json()
     _logger.info(f"Create start, input: {request_data}")
-    if any(key not in request_data for key in ["login", "password", "table"]):
-        return jsonify({"MESSAGES": f"Invalid input data: {request_data}"}), 400
 
-    if (
-        not user_repository.UserRepository.autentification(
-            request_data["login"], request_data["password"]
-        )
-        or user_repository.UserRepository.authorization(request_data["login"])[1]
-        == False
-    ):
-        return jsonify({"MESSAGES": "Forbidden", "STATUS": 403}), 403
+    error = _validate_base_request(request_data)
+    if error:
+        return error
 
-    response_data = {"STATUS": 200, "MESSAGES": [], "RESP": []}
-    data_to_create = request_data["data"]
+    error = _check_auth(request_data, 0)
+    if error:
+        return error
+
     table = request_data["table"]
-    if table not in handlers:
-        return jsonify({"MESSAGES": f"Unknown table: {table}", "STATUS": 400}), 400
+    err_resp, status, handler = _get_table_handler(table, "create")
+    if handler is None:
+        return err_resp, status
 
-    handler = handlers[table]
+    data_to_create = request_data.get("data", [])
+    response_data = _base_response()
+
     for data in data_to_create:
         response_data["RESP"].append(handler(data))
 
@@ -106,33 +162,26 @@ def create() -> tuple:
 @catcher
 @app.route("/update", methods=["POST"])
 def update() -> tuple:
-    handlers = {
-        "FileType": file_type_repository.FileTypeRepository.update,
-        "ThreatType": threat_type_repository.ThreatTypeRepository.update,
-        "ThreateningFiles": threatening_files_repository.ThreateningFileRepository.update,
-    }
     request_data: dict = request.get_json()
     _logger.info(f"Update start, input: {request_data}")
-    if any(key not in request_data for key in ["login", "password", "table"]):
-        return jsonify({"MESSAGES": f"Invalid input data: {request_data}"}), 400
 
-    if (
-        not user_repository.UserRepository.autentification(
-            request_data["login"], request_data["password"]
-        )
-        or user_repository.UserRepository.authorization(request_data["login"])[1]
-        == False
-    ):
-        return jsonify({"MESSAGES": "Forbidden", "STATUS": 403}), 403
+    error = _validate_base_request(request_data)
+    if error:
+        return error
 
-    response_data = {"STATUS": 200, "MESSAGES": [], "RESP": []}
-    data_to_create = request_data["data"]
+    error = _check_auth(request_data, 2)
+    if error:
+        return error
+
     table = request_data["table"]
-    if table not in handlers:
-        return jsonify({"MESSAGES": f"Unknown table: {table}", "STATUS": 400}), 400
+    err_resp, status, handler = _get_table_handler(table, "update")
+    if handler is None:
+        return err_resp, status
 
-    handler = handlers[table]
-    for data in data_to_create:
+    data_to_update = request_data.get("data", [])
+    response_data = _base_response()
+
+    for data in data_to_update:
         handler(data)
 
     return jsonify(response_data), 200
@@ -141,38 +190,28 @@ def update() -> tuple:
 @catcher
 @app.route("/delete", methods=["POST"])
 def delete() -> tuple:
-    handlers = {
-        "FileType": file_type_repository.FileTypeRepository.delete,
-        "ThreatType": threat_type_repository.ThreatTypeRepository.delete,
-        "ThreateningFiles": threatening_files_repository.ThreateningFileRepository.delete,
-    }
-
     request_data: dict = request.get_json()
     _logger.info(f"Delete start, input: {request_data}")
 
-    if any(key not in request_data for key in ["login", "password", "table"]):
-        return jsonify({"MESSAGES": f"Invalid input data: {request_data}"}), 400
+    error = _validate_base_request(request_data)
+    if error:
+        return error
 
-    if (
-        not user_repository.UserRepository.autentification(
-            request_data["login"], request_data["password"]
-        )
-        or user_repository.UserRepository.authorization(request_data["login"])[1]
-        == False
-    ):
-        return jsonify({"MESSAGES": "Forbidden", "STATUS": 403}), 403
+    error = _check_auth(request_data, 3)
+    if error:
+        return error
 
-    response_data = {"STATUS": 200, "MESSAGES": [], "RESP": []}
     table = request_data["table"]
-    if table not in handlers:
-        return jsonify({"MESSAGES": f"Unknown table: {table}", "STATUS": 400}), 400
-    handler = handlers[table]
+    err_resp, status, handler = _get_table_handler(table, "delete")
+    if handler is None:
+        return err_resp, status
 
-    search_args = {
+    delete_args = {
         k: v for k, v in request_data.items() if k not in ["login", "password", "table"]
     }
 
-    handler(**search_args)
+    handler(**delete_args)
+    response_data = _base_response()
     return jsonify(response_data), 200
 
 
@@ -189,7 +228,8 @@ def register_user() -> tuple:
         "can_read": 0,
         "registered": 0,
     }
-    response_data = {"STATUS": 200, "MESSAGES": [], "RESP": []}
+
+    response_data = _base_response()
     user = user_repository.UserRepository.create(request_data)
     response_data["RESP"].append(user)
     return jsonify(response_data), 200
