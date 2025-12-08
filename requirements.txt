@@ -1,1 +1,4 @@
 flask==2.3.3
+pyside6
+torch==2.9.1
+numpy==2.3.5
