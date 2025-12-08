@@ -50,23 +50,19 @@ class UserController:
         
     @catcher
     def update(self, data: dict, table: str):
-        self.client.update(data, table)
-        return True
+        return self.client.update(data, table)
         
     @catcher
     def delete(self, data: dict, table: str):
-        self.client.delete(data, table)
-        return True
+        return self.client.delete(data, table)
     
     @catcher
     def create(self, data: dict, table: str):
-        self.client.create(data, table)
-        return True
+        return self.client.create(data, table)
         
     @catcher
     def search(self, filter: dict, table: str):
-        self.client.search(filter, table)
-        return True
+        return self.client.search(filter, table)
         
     @catcher
     def search_sha_from_file(self, file_path: str, chunk_size: int = 8192) -> FileEmbedding:
