@@ -1,9 +1,9 @@
 services:
   api:
     build:
-      context: .              # корень проекта
+      context: .
       dockerfile: server/docker/Dockerfile
     container_name: ai_threat_scanner_api
     ports:
-      - "8300:8300"           # HOST:CONTAINER
+      - "8300:8300"
     restart: unless-stopped

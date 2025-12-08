@@ -412,3 +412,4 @@ def train_model_with_list(
     files = _load_dataset_from_file(list_path)
     train_model_with_embeddings(
         files, model_dir, batch_size, epochs, lr, val_split, device, pair_dim, loss_weights)
+    return files

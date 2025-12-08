@@ -6,3 +6,7 @@ CREATE_URL = f"{HOST_URL}/create"
 SEARCH_URL = f"{HOST_URL}/search"
 DELETE_URL = f"{HOST_URL}/delete"
 ONLINE_URL = f"{HOST_URL}/online"
+
+MODEL_DIR = r"model"
+BATCH_SIZE = 64
+EPOCHS = 100

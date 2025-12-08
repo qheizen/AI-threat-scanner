@@ -271,6 +271,7 @@ class Client:
     def search_file_with_sha(self, file: FileEmbedding):
         data = self.search({"sha256": file.sha256}, "ThreateningFiles") or []
         if data:
+            _logger.info(f"File with sha256 {file.sha256} finded!")
             row = data[0]
             ft = self.search({"id": row.get("file_type_id")}, "FileType") or []
             tt = self.search(
