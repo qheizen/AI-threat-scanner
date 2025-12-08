@@ -9,25 +9,24 @@ from .data_mappers import *
 import traceback
 from .utils import logger
 from .utils import const
+from functools import wraps
 
 _logger = logger.get_module_logger("API")
 app = Flask(__name__)
 
 
 def catcher(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except Exception as e:
             traceback_msg = traceback.format_exc()
-            _logger.error(
-                f"Something at {func.__name__}\nExc: {e}\n{traceback_msg}")
+            _logger.error(f"Something at {func.__name__}\nExc: {e}\n{traceback_msg}")
             return jsonify({"MESSAGES": str(e), "STATUS": 500}), 500
-
     return wrapper
 
 
-# Универсальный маппинг таблица -> репозиторий
 TABLE_HANDLERS = {
     "FileType": {
         "search": file_type_repository.FileTypeRepository.search,
@@ -58,14 +57,16 @@ def _validate_base_request(request_data: dict):
 
 
 def _check_auth(request_data: dict, operation: int = 0):
-    """Аутентификация и авторизация пользователя."""
-    if (
-        not user_repository.UserRepository.autentification(
-            request_data["login"], request_data["password"]
-        )
-        or user_repository.UserRepository.authorization(request_data["login"])[operation]
-        is False
-    ):
+    ok = user_repository.UserRepository.autentification(request_data["login"], request_data["password"])
+    auth = user_repository.UserRepository.authorization(request_data["login"])
+    has_perm = False
+    try:
+        if isinstance(auth, (list, tuple)) and len(auth) > operation:
+            has_perm = bool(auth[operation])
+    except Exception:
+        has_perm = False
+
+    if not ok or not has_perm:
         return jsonify({"MESSAGES": "Forbidden", "STATUS": 403}), 403
     return None
 
@@ -104,7 +105,6 @@ def search() -> tuple:
     request_data: dict = request.get_json()
     _logger.info(f"Search start, input: {request_data}")
 
-    # Валидируем базовые поля
     error = _validate_base_request(request_data)
     if error:
         return error
@@ -118,16 +118,31 @@ def search() -> tuple:
     if handler is None:
         return err_resp, status
 
-    search_args = {
-        k: v for k, v in request_data.items() if k not in ["login", "password", "table"]
-    }
+    search_args = request_data.get("data", {}) or {}
 
     result = handler(**search_args)
     response_data = _base_response()
+
     if isinstance(result, list):
-        response_data["RESP"] = [user.to_dict() for user in result]
+        resp_list = []
+        for item in result:
+            if hasattr(item, "to_dict"):
+                resp_list.append(item.to_dict())
+            elif isinstance(item, dict):
+                resp_list.append(item)
+            else:
+                resp_list.append({"value": item})
+        response_data["RESP"] = resp_list
     else:
-        response_data["RESP"].append(result.to_dict())
+        if result is None:
+            response_data["RESP"] = []
+        else:
+            if hasattr(result, "to_dict"):
+                response_data["RESP"].append(result.to_dict())
+            elif isinstance(result, dict):
+                response_data["RESP"].append(result)
+            else:
+                response_data["RESP"].append({"value": result})
 
     return jsonify(response_data), 200
 
@@ -151,12 +166,18 @@ def create() -> tuple:
     if handler is None:
         return err_resp, status
 
-    data_to_create = request_data.get("data", [])
-    
+    data_to_create = request_data.get("data", []) or []
+
     response_data = _base_response()
 
     for data in data_to_create:
-        response_data["RESP"].append(handler(data).to_dict())
+        res = handler(data)
+        if hasattr(res, "to_dict"):
+            response_data["RESP"].append(res.to_dict())
+        elif isinstance(res, dict):
+            response_data["RESP"].append(res)
+        else:
+            response_data["RESP"].append({"id": getattr(res, "id", None)})
 
     return jsonify(response_data), 200
 
@@ -180,11 +201,14 @@ def update() -> tuple:
     if handler is None:
         return err_resp, status
 
-    data_to_update = request_data.get("data", [])
+    data_to_update: list[dict] = request_data.get("data", []) or []
     response_data = _base_response()
 
     for data in data_to_update:
-        handler(data)
+        if "id" not in data:
+            continue
+        _id = data.pop("id")
+        handler(_id, data)
 
     return jsonify(response_data), 200
 
@@ -208,9 +232,7 @@ def delete() -> tuple:
     if handler is None:
         return err_resp, status
 
-    delete_args = {
-        k: v for k, v in request_data.items() if k not in ["login", "password", "table"]
-    }
+    delete_args = request_data.get("data", {})
 
     handler(**delete_args)
     response_data = _base_response()
@@ -242,14 +264,24 @@ def register_user() -> tuple:
 def get_user_id() -> tuple:
     request_data: dict = request.get_json()
     _logger.info(f"User search start, input: {request_data}")
-
-    error = _check_auth(request_data, 1)
-    if error:
-        return error
-
+    
     response_data = _base_response()
     user = user_repository.UserRepository.search(login=request_data["login"])
-    response_data["RESP"].append(user.to_dict())
+    if isinstance(user, list):
+        if user:
+            u = user[0]
+            response_data["RESP"].append(u.to_dict() if hasattr(u, "to_dict") else u)
+    elif user:
+        response_data["RESP"].append(user.to_dict() if hasattr(user, "to_dict") else user)
+    else:
+        return jsonify({"MESSAGES": "User not found", "STATUS": 403}), 403
+    return jsonify(response_data), 200
+
+
+@catcher
+@app.route("/online", methods=["POST"])
+def get_online() -> tuple:
+    response_data = _base_response()
     return jsonify(response_data), 200
 
 

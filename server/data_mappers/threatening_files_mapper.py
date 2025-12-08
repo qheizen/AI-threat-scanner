@@ -46,7 +46,7 @@ class ThreateningFile:
             "threatType_id": self.threat_type_id,
             "fileType_id": self.file_type_id,
             "creationDate": self.creation_date,
-            "verdict": self.file_verdict,
+            "fileVerdict": self.file_verdict,
             "approveState": self.approve_state,
             "createdBy": self.created_by,
         }

@@ -1,0 +1,8 @@
+HOST_URL = f"http://127.0.0.1:8300"
+AUTH_URL = f"{HOST_URL}/getuserid"
+CREATE_USER_URL = f"{HOST_URL}/register"
+UPDATE_URL = f"{HOST_URL}/update"
+CREATE_URL = f"{HOST_URL}/create"
+SEARCH_URL = f"{HOST_URL}/search"
+DELETE_URL = f"{HOST_URL}/delete"
+ONLINE_URL = f"{HOST_URL}/online"

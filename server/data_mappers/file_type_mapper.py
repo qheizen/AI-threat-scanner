@@ -64,6 +64,12 @@ class FileTypeMapper:
         db.write_db("DELETE FROM FileTypes WHERE name = '%s'" % sanitized_name)
 
     @staticmethod
+    def get_file_type_with_extension(extension: str):
+        sanitized_extension = sanitize_sql_string(extension)
+        db.write_db("DELETE FROM FileTypes WHERE extension = '%s'" % sanitized_extension)
+
+    
+    @staticmethod
     def create(type: FileType) -> bool:
         if isinstance(type, dict):
             type = FileType.from_dict(type)

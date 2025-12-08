@@ -7,11 +7,13 @@ _logger = logger.get_module_logger("FileTypeRepository")
 class FileTypeRepository:
 
     @staticmethod
-    def search(id: int = None, name: str = None) -> FileType:
+    def search(id: int = None, name: str = None, extension: str = None) -> FileType:
         if name:
             return FileTypeMapper.get_file_type_with_name(name)
         elif id:
             return FileTypeMapper.get_file_types_from_user_id(id)
+        elif extension:
+            return FileTypeMapper.get_file_type_with_extension(extension)
         else:
             return FileTypeMapper.get_all()
 

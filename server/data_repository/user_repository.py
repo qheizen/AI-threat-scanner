@@ -30,8 +30,9 @@ class UserRepository:
         user_data["password"] = hashlib.sha256(
             user_data["password"].encode("utf-8")
         ).hexdigest()
+        num = random.getrandbits(256)
         user_data["registrationToken"] = hashlib.sha256(
-            random.Random.getrandbits(256)
+            num.to_bytes(32, "big")
         ).hexdigest()
         return UserMapper.create(user_data)
 

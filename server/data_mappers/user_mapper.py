@@ -101,7 +101,11 @@ class UserMapper:
             _logger.error(f"Record {user.login} already exists!")
             return False
 
-        sql_request = "INSERT INTO Users (name, email, login, password, can_create, can_update, can_delete, can_read, registered, registrationToken) VALUES (%s, '%s', '%s', '%s', '%s', %s, %s, %s, %s, %s, '%s')"
+        sql_request = (
+            "INSERT INTO Users (name, email, login, password, can_create, "
+            "can_update, can_delete, can_read, registered, registrationToken) "
+            "VALUES ('%s', '%s', '%s', '%s', %s, %s, %s, %s, %s, '%s')"
+        )
         request = sql_request % (
             sanitize_sql_string(user.name),
             sanitize_sql_string(user.email),
@@ -114,6 +118,7 @@ class UserMapper:
             int(user.registered),
             sanitize_sql_string(user.registration_token),
         )
+
 
         try:
             db.write_db(request)
