@@ -1,4 +1,3 @@
-import json
 import requests
 import traceback
 from .utils import logger
@@ -8,8 +7,8 @@ from .ai_core.ai_model import FileEmbedding
 from functools import wraps
 
 
-
 _logger = logger.get_module_logger("API")
+
 
 def catcher(func):
     @wraps(func)
@@ -18,8 +17,9 @@ def catcher(func):
             return func(*args, **kwargs)
         except Exception as e:
             traceback_msg = traceback.format_exc()
-            _logger.error(f"Something at {func.__name__}\nExc: {e}\n{traceback_msg}")
-            
+            _logger.error(
+                f"Something at {func.__name__}\nExc: {e}\n{traceback_msg}")
+
             return False
     return wrapper
 
@@ -40,7 +40,7 @@ class Client:
         except:
             _logger.error("Service is not online!")
             return False
-            
+
         data = {"login": self.login, "password": self.password}
         resp = requests.post(const.AUTH_URL, json=data)
         try:
@@ -48,12 +48,12 @@ class Client:
         except Exception as e:
             _logger.error(f"Something wrong {e}")
             return False
-        
+
         response = resp.json()
 
         if int(response.get("STATUS", 500)) == 200:
             resp_data = response.get("RESP", {})
-            
+
             if isinstance(resp_data, list) and resp_data:
                 resp_data = resp_data[0]
             self.user_id = resp_data.get("id")
@@ -71,13 +71,14 @@ class Client:
         except:
             _logger.error("Service is not online!")
             return False
-        
+
         user = cls(login, password)
-        
+
         if user.authorization():
             return user
 
-        data = {"name": name, "email": email, "login": login, "password": password}
+        data = {"name": name, "email": email,
+                "login": login, "password": password}
         resp = requests.post(const.CREATE_USER_URL, json=data)
         resp.raise_for_status()
         resp_json = resp.json()
@@ -89,7 +90,8 @@ class Client:
                 resp_data = resp_data[0]
             user.email = resp_data.get("email", "")
             user.user_id = resp_data.get("id")
-            _logger.info(f"User created! name = {name}, email = {email}, id = {user.user_id}")
+            _logger.info(
+                f"User created! name = {name}, email = {email}, id = {user.user_id}")
             return user
 
         return False
@@ -99,7 +101,7 @@ class Client:
         if not self.online:
             _logger.error("User is not online!")
             return False
-        
+
         payload = {
             "data": filters or {},
             "table": table,
@@ -107,7 +109,6 @@ class Client:
             "password": self.password
         }
 
-        
         if "user_id" in payload["data"]:
             payload["data"]["user_id"] = self.user_id
 
@@ -125,7 +126,7 @@ class Client:
         if not self.online:
             _logger.error("User is not online!")
             return False
-        
+
         payload = {
             "data": [data] if isinstance(data, dict) else data,
             "table": table,
@@ -147,7 +148,7 @@ class Client:
         if not self.online:
             _logger.error("User is not online!")
             return False
-        
+
         payload = {
             "data": [data] if isinstance(data, dict) else data,
             "table": table,
@@ -169,7 +170,7 @@ class Client:
         if not self.online:
             _logger.error("User is not online!")
             return False
-        
+
         payload = {
             "data": data,
             "table": table,
@@ -177,7 +178,6 @@ class Client:
             "password": self.password
         }
 
-        
         resp = requests.post(const.DELETE_URL, json=payload)
         resp.raise_for_status()
         resp_json = resp.json()
@@ -286,9 +286,3 @@ class Client:
             return file
 
         return False
-
-cl = Client.create_user("admin", "admin", "admin", "admin@gmail.com")
-while True:
-    eval(str(input()))
-    
-    
