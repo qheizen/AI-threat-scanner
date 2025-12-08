@@ -9,13 +9,15 @@ _logger = logger.get_module_logger("ThreateningFileMapper")
 class ThreateningFile:
 
     def __init__(
-        self, id: int = -1, file_name: str = "", sha256: str = "", file_embedding: str = "", threat_type_id: int = 0, creation_date: str = "", created_by: int = 0, approve_state: str = 'unnaproved'
+        self, id: int = -1, file_name: str = "", sha256: str = "", file_embedding: str = "", threat_type_id: int = 0, creation_date: str = "", created_by: int = 0, approve_state: str = 'unnaproved', file_verdict: str = 'None', file_type_id: int = 0
     ):
         self.id = id
         self.file_name = file_name
         self.sha256 = sha256
         self.file_embedding = file_embedding
         self.threat_type_id = threat_type_id
+        self.file_type_id = file_type_id
+        self.file_verdict = file_verdict
         self.creation_date = creation_date
         self.approve_state = approve_state
         self.created_by = created_by
@@ -28,7 +30,9 @@ class ThreateningFile:
             sha256=data.get("sha256", ""),
             file_embedding=data.get("fileEmbedding", ""),
             threat_type_id=data.get("threatType_id", 0),
+            file_type_id=data.get("fileType_id", 0),
             creation_date=data.get("creationDate", ""),
+            file_verdict=data.get("fileVerdict", "None"),
             approve_state=data.get('approveState', "unnaproved"),
             created_by=data.get("createdBy", 0),
         )
@@ -40,7 +44,9 @@ class ThreateningFile:
             "sha256": self.sha256,
             "fileEmbedding": self.file_embedding,
             "threatType_id": self.threat_type_id,
+            "fileType_id": self.file_type_id,
             "creationDate": self.creation_date,
+            "verdict": self.file_verdict,
             "approveState": self.approve_state,
             "createdBy": self.created_by,
         }
@@ -112,7 +118,7 @@ class ThreateningFileMapper:
 
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        sql_request = "INSERT INTO ThreateningFiles (fileName, sha256, fileEmbedding, threatType_id, creationDate, createdBy, approveState) VALUES ('%s', '%s', '%s', %s, '%s', %s, '%s')"
+        sql_request = "INSERT INTO ThreateningFiles (fileName, sha256, fileEmbedding, threatType_id, creationDate, createdBy, approveState, fileVerdict, fileType_id) VALUES ('%s', '%s', '%s', %s, '%s', %s, '%s', '%s', %s)"
         request = sql_request % (
             sanitize_sql_string(file.file_name),
             sanitize_sql_string(file.sha256),
@@ -121,6 +127,8 @@ class ThreateningFileMapper:
             current_date,
             int(file.created_by),
             sanitize_sql_string(file.approve_state),
+            sanitize_sql_string(file.file_verdict),
+            int(file.file_type_id)
         )
         try:
             db.write_db(request)
