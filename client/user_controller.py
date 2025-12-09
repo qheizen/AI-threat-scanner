@@ -45,7 +45,7 @@ class UserController:
     
     @catcher
     def create_new_threattype(self, name: str, description: str):
-        self.client.create_new_threatfiles(name, description)
+        self.client.create_new_threattype(name, description)
         return True
         
     @catcher

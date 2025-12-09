@@ -157,6 +157,8 @@ def predict_embedding(files: list[FileEmbedding], model_dir: str, threshold: flo
         file.threat_type = threat_pred
         result.append(file)
 
+    if len(result) == 1:
+        return result[0]
     return result
 
 

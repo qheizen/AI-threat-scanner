@@ -21,6 +21,7 @@ class Worker(QtCore.QThread):
 
     def run(self):
         try:
+            print("Worker started!")
             result = self.func(*self.args, **self.kwargs)
             self.finished.emit(result)
         except Exception as e:
@@ -333,6 +334,10 @@ class MainWindow(QtWidgets.QMainWindow):
         left = QtWidgets.QVBoxLayout()
         layout.addLayout(left, 1)
         
+        self._scan_worker = None
+        self._get_train_worker = None
+        self._choose_train_worker = None
+        
         self.scan_btn = QtWidgets.QPushButton("Начать сканирование (выбрать директорию)")
         self.scan_progress = QtWidgets.QProgressBar()
         self.scan_progress.setVisible(False)
@@ -397,10 +402,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scan_progress.setRange(0, 0)
         self.scan_btn.setEnabled(False)
 
-        worker = Worker(self.model_controller.predict_with_list, dir_path)
-        worker.finished.connect(self._on_scan_finished)
-        worker.error.connect(lambda e: self._on_worker_error(e, 'Сканирование'))
-        worker.start()
+        self._scan_worker = Worker(self.model_controller.predict_with_list, dir_path)
+        self._scan_worker.finished.connect(self._on_scan_finished)
+        self._scan_worker.finished.connect(self._cleanup_scan_worker)
+        self._scan_worker.error.connect(lambda e: (self._on_worker_error(e, 'Сканирование'), self._cleanup_scan_worker()))
+        self._scan_worker.start()
+    
+    def _cleanup_scan_worker(self, *args):
+        if self._scan_worker is None:
+            return
+        try:
+            self._scan_worker.deleteLater()
+        except Exception:
+            pass
+        self._scan_worker = None
         
     def _on_scan_finished(self, result):
         self.scan_btn.setEnabled(True)
@@ -429,11 +444,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.table.clearContents()
         self.table.setRowCount(len(rows))
         for i, r in enumerate(rows):
-            self.table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(r.get('file_name', ''))))
-            self.table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(r.get('sha256', ''))))
-            self.table.setItem(i, 2, QtWidgets.QTableWidgetItem(str(r.get('file_verdict', ''))))
-            self.table.setItem(i, 3, QtWidgets.QTableWidgetItem(str(r.get('threat_type', ''))))
-            self.table.setItem(i, 4, QtWidgets.QTableWidgetItem(str(r.get('file_type', ''))))
+            self.table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(r.get('Название', ''))))
+            self.table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(r.get('Хэш SHA256', ''))))
+            self.table.setItem(i, 2, QtWidgets.QTableWidgetItem(str(r.get('Вердикт', ''))))
+            self.table.setItem(i, 3, QtWidgets.QTableWidgetItem(str(r.get('Тип угрозы', ''))))
+            self.table.setItem(i, 4, QtWidgets.QTableWidgetItem(str(r.get('Тип файла', ''))))
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         
     def on_get_train(self):
@@ -442,10 +457,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.get_train_progress.setRange(0, 0)
         self.get_train_btn.setEnabled(False)
 
-        worker = Worker(self.model_controller.train_model_with_server)
-        worker.finished.connect(self._on_get_train_finished)
-        worker.error.connect(lambda e: self._on_worker_error(e, 'GetTrain'))
-        worker.start()
+        self._get_train_worker = Worker(self.model_controller.train_model_with_server)
+        self._get_train_worker.finished.connect(self._on_get_train_finished)
+        self._get_train_worker.finished.connect(self._cleanup_get_train_worker)
+        self._get_train_worker.error.connect(lambda e: (self._on_worker_error(e, 'GetTrain'), self._cleanup_get_train_worker()))
+        self._get_train_worker.start()
+        
+    def _cleanup_get_train_worker(self, *args):
+        if self._get_train_worker is None:
+            return
+        try:
+            self._get_train_worker.deleteLater()
+        except Exception:
+            pass
+        self._get_train_worker = None
         
     def _on_get_train_finished(self, result):
         self.get_train_btn.setEnabled(True)
@@ -460,19 +485,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_choose_train(self):
         self.ensure_model_controller()
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Select training file")
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select training file")
         if not file_path:
             return
+        self.choose_train_btn.setEnabled(False)
         self.choose_train_progress.setVisible(True)
         self.choose_train_progress.setRange(0, 0)
-        self.choose_train_btn.setEnabled(False)
 
-        worker = Worker(self.model_controller.train_model_with_file, file_path)
-        worker.finished.connect(self._on_choose_train_finished)
-        worker.error.connect(lambda e: self._on_worker_error(e, 'ChooseTrain'))
-        worker.start()
+        self._choose_train_worker = Worker(self.model_controller.train_model_with_file, file_path)
+        self._choose_train_worker.finished.connect(self._on_choose_train_finished)
+        self._choose_train_worker.finished.connect(self._cleanup_choose_train_worker)
+        self._choose_train_worker.error.connect(lambda e: (self._on_worker_error(e, 'ChooseTrain'), self._cleanup_choose_train_worker()))
+        self._choose_train_worker.start()
 
+    def _cleanup_choose_train_worker(self, *args):
+        if self._choose_train_worker is None:
+            return
+        try:
+            self._choose_train_worker.deleteLater()
+        except Exception:
+            pass
+        self._choose_train_worker = None
+    
     def _on_choose_train_finished(self, result):
         self.choose_train_btn.setEnabled(True)
         self.choose_train_progress.setRange(0, 100)

@@ -1,0 +1,12 @@
+{
+  "filetype_list": [
+    "exe",
+    "none"
+  ],
+  "threat_list": [
+    "cve2000",
+    "none"
+  ],
+  "input_dim": 1299,
+  "pair_dim": 1024
+}

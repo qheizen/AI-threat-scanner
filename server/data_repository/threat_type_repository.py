@@ -10,7 +10,7 @@ class ThreatTypeRepository:
     def create(type_data: dict) -> ThreatType:
         if any(
             key not in type_data
-            for key in ["threatName", "createdBy", "threatPrototype"]
+            for key in ["threatName", "createdBy"]
         ):
             _logger.error(f"Record corrupted {type_data}")
             return None
@@ -18,13 +18,15 @@ class ThreatTypeRepository:
         return ThreatTypeMapper.create(type_data)
 
     @staticmethod
-    def search(id: int = None, user_id: int = None, name: str = None):
+    def search(id: int = None, user_id: int = None, name: str = None, threatName: str = None):
         if name:
             return ThreatTypeMapper.get_threat_with_name(name)
         elif user_id:
             return ThreatTypeMapper.get_threat_types_from_user_id(user_id)
         elif id:
             return ThreatTypeMapper.get_threat_types_from_id(id)
+        elif threatName:
+            return ThreatTypeMapper.get_threat_with_name(threatName)
         else:
             return ThreatTypeMapper.get_all()
 

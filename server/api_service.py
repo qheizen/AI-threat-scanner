@@ -67,7 +67,8 @@ def _check_auth(request_data: dict, operation: int = 0):
         has_perm = False
 
     if not ok or not has_perm:
-        return jsonify({"MESSAGES": "Forbidden", "STATUS": 403}), 403
+        _logger.error(f"Forbidden {has_perm} {ok}")
+        return jsonify({"MESSAGES": f"Forbidden {has_perm} {ok}", "STATUS": 403}), 403
     return None
 
 
@@ -143,7 +144,6 @@ def search() -> tuple:
                 response_data["RESP"].append(result)
             else:
                 response_data["RESP"].append({"value": result})
-
     return jsonify(response_data), 200
 
 

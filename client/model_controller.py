@@ -62,7 +62,7 @@ class ModelController:
             results.append(result)
 
         self.client.create_new_threatfiles(results)
-        _logger.info(f"Train data was loaded!")
+        _logger.info(f"Scanned")
         return results
     
     @catcher
