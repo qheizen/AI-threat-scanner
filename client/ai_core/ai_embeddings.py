@@ -47,7 +47,7 @@ def file2embedding(file_path: str, pair_dim: int = 1024, chunk_size: int = 1024 
             if data.size >= 1:
                 idx = (int(prev) << 8) | int(data[0])
                 bucket = (idx * 2654435761) & 0xFFFFFFFF
-                bucket = (bucket >> 32 - int(math.log2(pair_dim))) if (pair_dim &
+                bucket = bucket >> (32 - int(math.log2(pair_dim))) if (pair_dim &
                                                                        (pair_dim-1) == 0 and pair_dim > 0) else bucket % pair_dim
                 pair_counts[bucket] += 1
                 for i in range(data.size - 1):
@@ -55,7 +55,7 @@ def file2embedding(file_path: str, pair_dim: int = 1024, chunk_size: int = 1024 
                     b2 = int(data[i+1])
                     idx = (b1 << 8) | b2
                     bucket = (idx * 2654435761) & 0xFFFFFFFF
-                    bucket = (bucket >> 32 - int(math.log2(pair_dim))) if (pair_dim &
+                    bucket = bucket >> (32 - int(math.log2(pair_dim))) if (pair_dim &
                                                                            (pair_dim-1) == 0 and pair_dim > 0) else bucket % pair_dim
                     pair_counts[bucket] += 1
                 prev_byte = int(data[-1])
