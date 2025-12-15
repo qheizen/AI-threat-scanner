@@ -416,12 +416,13 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception:
             pass
         self._scan_worker = None
-        
+            
     def _on_scan_finished(self, result):
         self.scan_btn.setEnabled(True)
-        self.scan_progress.setRange(0, 100)
-        self.scan_progress.setValue(100)
-        
+        self.scan_progress.setRange(0, 1)
+        self.scan_progress.setValue(0)
+        self.scan_progress.setVisible(False)
+
         if result is False or result is None:
             QtWidgets.QMessageBox.warning(self, "Сканирование", "Сканирование не удалось")
             return
@@ -474,8 +475,10 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def _on_get_train_finished(self, result):
         self.get_train_btn.setEnabled(True)
-        self.get_train_progress.setRange(0, 100)
-        self.get_train_progress.setValue(100)
+        self.get_train_progress.setRange(0, 1)
+        self.get_train_progress.setValue(0)
+        self.get_train_progress.setVisible(False)
+
         if result is True:
             QtWidgets.QMessageBox.information(
                 self, "Тренировка", "Тренировка корректно завершена")
@@ -509,8 +512,10 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def _on_choose_train_finished(self, result):
         self.choose_train_btn.setEnabled(True)
-        self.choose_train_progress.setRange(0, 100)
-        self.choose_train_progress.setValue(100)
+        self.choose_train_progress.setRange(0, 1)
+        self.choose_train_progress.setValue(0)
+        self.choose_train_progress.setVisible(False)
+
         if result is True:
             QtWidgets.QMessageBox.information(
                 self, "Тренировка", "Тренировка корректно завершена")
