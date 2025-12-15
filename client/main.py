@@ -614,6 +614,7 @@ def main():
         if dlg.exec():
             login.accept()
 
+    # пасхалочк)
     login.login_btn.clicked.connect(do_login)
     login.register_btn.clicked.connect(do_register)
     
