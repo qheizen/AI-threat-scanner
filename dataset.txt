@@ -1,0 +1,21 @@
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\CyclicList.cpp Threat list LIST2020
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\CyclicList.h Threat list LIST2020
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\DataReaderADS.cpp Safe reader
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\DataReaderADS.h Safe reader
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\DoublyLinkedCycleList.cpp Threat list LIST2022
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\DoublyLinkedCycleList.h Threat list LIST2022
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\InputFile.txt Safe input
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\List.cpp Threat list LIST2021
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\List.h Threat list LIST2021
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\OptimizedMatrix.cpp Safe matrix
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\OptimizedMatrix.h Safe matrix
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\Queue.cpp Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\Queue.h Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\QueueInstrument.cpp Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\QueueInstrument.h Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\RussianSet.cpp Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\RussianSet.h Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\SearchAlgorithms.h Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\SortAlgorithms.cpp Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\Set.h Safe queue
+E:\C++project\Algorithfms_and_data_structures\Algorithfms_and_data_structures\SortAlgorithms.h Safe queue
