@@ -18,6 +18,7 @@ def file2embedding(file_path: str, pair_dim: int = 1024, chunk_size: int = 1024 
 
     first_bytes = []
 
+
     with open(file_path, "rb") as f:
         while True:
             chunk = f.read(chunk_size)
