@@ -234,8 +234,8 @@ class Client:
                 "fileName": file.file_name,
                 "sha256": file.sha256,
                 "fileEmbedding": embedding_to_str(file.file_embedding),
-                "threat_type_id": threat_type_id,
-                "file_type_id": file_type_id,
+                "threatType_id": threat_type_id,
+                "fileType_id": file_type_id,
                 "fileVerdict": file.file_verdict,
                 "createdBy": self.user_id
             })
