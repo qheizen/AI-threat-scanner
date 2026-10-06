@@ -1,0 +1,1 @@
+print(exec(str(input())))

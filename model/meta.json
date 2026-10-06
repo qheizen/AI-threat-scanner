@@ -1,11 +1,9 @@
 {
   "filetype_list": [
-    "exe",
-    "none"
+    "list"
   ],
   "threat_list": [
-    "cve2000",
-    "none"
+    "list2020"
   ],
   "input_dim": 1299,
   "pair_dim": 1024
